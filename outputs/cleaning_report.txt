@@ -1,0 +1,18 @@
+WIFISCOPE DATA CLEANING REPORT
+========================================
+Original rows: 1946
+Rows removed due to missing essential values: 0
+Duplicate rows removed: 0
+Invalid coordinate rows removed: 0
+rssi1: invalid RSSI readings removed: 1
+rssi2: invalid RSSI readings removed: 0
+rssi1 outliers detected: 7
+rssi2 outliers detected: 7
+Outlier readings were flagged and kept in the cleaned data.
+Distance and logarithmic distance calculated.
+
+FINAL SUMMARY
+----------------------------------------
+Final valid rows: 1945
+Rows removed: 1
+Missing values remaining: 0
