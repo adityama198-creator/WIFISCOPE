@@ -102,12 +102,12 @@ The program also reports the outlier flags.
 The floor plan is divided into 2 m by 2 m squares. If more than one receiver
 falls in a square, their RSSI values are averaged.
 
-The program prints a text map in the terminal and creates an HTML colour map.
-The colours show signal strength: green is strong, red is weak, and grey means
-there is no measurement in that square. Open `outputs/wifiscope_heatmap.html`
-in a web browser to view it.
+The program prints a compact terminal dashboard containing the key numbers,
+coverage-quality bars, distance-zone signal bars, and a text heatmap. A 2 m by
+2 m square is shown as `E`, `G`, `F`, `W`, or `V` for its signal quality.
+The router is marked `R`, and `.` means no measurement in that square.
 
 ### 12. Save the results
 
 The program saves the cleaned data, cleaning report, analysis results, distance
-zone summary, text report, and HTML heatmap in the `outputs` folder.
+zone summary, and text report in the `outputs` folder.

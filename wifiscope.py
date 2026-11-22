@@ -159,77 +159,49 @@ for gy in grid.index:
             row += letter(grid.loc[gy, gx])
     text_map.append(row)
 
-print("\n--- Text heatmap (north is up) ---")
-print("\n".join(text_map))
+print("\n" + "=" * 72)
+print("WIFISCOPE - TERMINAL DASHBOARD")
+print("=" * 72)
 
-# =========================================================
-# STEP 11: COLOUR HEATMAP (HTML page built with NumPy + Pandas)
-# =========================================================
-# Colour rule: -90 dBm (weak) = red, -65 = yellow, -40 (strong) = green.
-def colour(value):
-    t = np.clip((value + 90) / 50, 0, 1)                  # 0 to 1
-    r = np.interp(t, [0, 0.5, 1], [215, 254, 26])
-    g = np.interp(t, [0, 0.5, 1], [48, 224, 152])
-    b = np.interp(t, [0, 0.5, 1], [39, 139, 80])
-    return f"rgb({int(r)},{int(g)},{int(b)})"
+print("\nKEY NUMBERS")
+print("-" * 72)
+print(f"{'Total points':24} {len(df):>8}")
+print(f"{'Average signal':24} {df['rssi'].mean():>7.1f} dBm")
+print(f"{'Strongest':24} {best['rssi']:>7.1f} dBm  ({best['receiver']})")
+print(f"{'Weakest':24} {worst['rssi']:>7.1f} dBm  ({worst['receiver']})")
+print(f"{'Dead-zone points':24} {len(dead):>8}")
+print(f"{'Outliers kept':24} {int(df['rssi1_outlier'].sum()):>8}")
+print(f"{'Distance vs signal corr.':24} {corr_distance:>8.2f}")
+print(f"{'Rays vs signal corr.':24} {corr_rays:>8.2f}")
 
-rows_html = ""
-for gy in grid.index:
-    rows_html += "<tr>"
-    for gx in grid.columns:
-        value = grid.loc[gy, gx]
-        if np.isnan(value):
-            bg = "#f2f2f2"
-            tip = "no data"
-        else:
-            bg = colour(value)
-            tip = f"{value:.1f} dBm"
-        mark = "&#9733;" if (gx == 0 and gy == 0) else ""     # star = router
-        rows_html += f'<td style="background:{bg}" title="x={gx}m, y={gy}m: {tip}">{mark}</td>'
-    rows_html += "</tr>\n"
+print("\nCOVERAGE QUALITY")
+print("-" * 72)
+print(f"{'Quality':12} {'Points':>8} {'Percent':>9}  Distribution")
+print("-" * 72)
+for quality in quality_order:
+    points = int(quality_count.loc[quality])
+    percent = float(quality_pct.loc[quality])
+    bar = "#" * int(round(percent / 5))
+    print(f"{quality:12} {points:>8} {percent:>8.1f}%  {bar}")
 
-# simple bar rows for distance zones (width = how strong the signal is)
-bars_html = ""
+print("\nSIGNAL BY DISTANCE")
+print("-" * 72)
+print(f"{'Zone':10} {'Points':>8} {'Mean':>10} {'Min':>10} {'Max':>10}")
+print("-" * 72)
 for name, row in zone_table.iterrows():
-    width = int(np.clip((row["mean"] + 90) / 50, 0, 1) * 300)
-    bars_html += (f'<div>{name:>8} <span class="bar" style="width:{width}px;'
-                  f'background:{colour(row["mean"])}"></span> {row["mean"]} dBm</div>\n')
+    mean_strength = float(row["mean"])
+    bar_width = int(np.clip((mean_strength + 90) / 50, 0, 1) * 24)
+    bar = "#" * bar_width
+    print(f"{str(name):10} {int(row['points']):>8} "
+          f"{mean_strength:>9.2f} {float(row['min']):>9.2f} "
+          f"{float(row['max']):>9.2f} dBm")
+    print(f"{'':10} {'':>8} {'':>10} {'':>10} [{bar:<24}]")
 
-page = f"""<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>WiFiScope</title>
-<style>
- body {{ font-family: Arial, sans-serif; margin: 20px; }}
- table.map {{ border-collapse: collapse; }}
- table.map td {{ width: 10px; height: 10px; padding: 0; font-size: 9px;
-                text-align: center; line-height: 10px; }}
- .bar {{ display: inline-block; height: 14px; vertical-align: middle; }}
- table.data {{ border-collapse: collapse; }}
- table.data td, table.data th {{ border: 1px solid #999; padding: 4px 10px; }}
-</style></head><body>
-<h1>WiFiScope - Wi-Fi Heatmap Floor Plan</h1>
-<p>Each square is 2 m x 2 m. Green = strong signal, red = weak signal,
-grey = no measurement, star = router. Hover over a square to see its value.</p>
-<table class="map">
-{rows_html}</table>
-<h2>Coverage quality</h2>
-{quality_table.to_html(classes="data")}
-<h2>Average signal by distance from router</h2>
-{bars_html}
-<h2>Key numbers</h2>
-<ul>
-<li>Total points: {len(df)}</li>
-<li>Average signal: {df['rssi'].mean():.1f} dBm</li>
-<li>Strongest: {best['rssi']:.1f} dBm ({best['receiver']})</li>
-<li>Weakest: {worst['rssi']:.1f} dBm ({worst['receiver']})</li>
-<li>Dead-zone points: {len(dead)}</li>
-<li>Outlier readings flagged and kept: {int(df['rssi1_outlier'].sum())}</li>
-<li>Correlation distance vs signal: {corr_distance:.2f}</li>
-<li>Correlation rays vs signal: {corr_rays:.2f}</li>
-</ul>
-</body></html>"""
-
-with open("outputs\\wifiscope_heatmap.html", "w", encoding="utf-8") as f:
-    f.write(page)
+print("\nWI-FI HEATMAP - NORTH IS UP")
+print("-" * 72)
+print("E = excellent  G = good  F = fair  W = weak  V = very weak")
+print("R = router      . = no measurement")
+print("\n".join(text_map))
 
 # =========================================================
 # STEP 12: SAVE RESULTS
@@ -255,4 +227,4 @@ with open("outputs\\wifiscope_summary_report.txt", "w", encoding="utf-8") as f:
     f.write("\n\nText heatmap (north is up):\n")
     f.write("\n".join(text_map))
 
-print("\nDone! Open outputs\\wifiscope_heatmap.html in your browser to see the heatmap.")
+print("\nDone! Results were saved in the outputs folder.")
