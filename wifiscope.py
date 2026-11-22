@@ -159,6 +159,90 @@ for gy in grid.index:
             row += letter(grid.loc[gy, gx])
     text_map.append(row)
 
+# =========================================================
+# STEP 11: COLOUR HEATMAP (HTML page)
+# =========================================================
+def colour(value):
+    t = np.clip((value + 90) / 50, 0, 1)
+    r = np.interp(t, [0, 0.5, 1], [215, 254, 26])
+    g = np.interp(t, [0, 0.5, 1], [48, 224, 152])
+    b = np.interp(t, [0, 0.5, 1], [39, 139, 80])
+    return f"rgb({int(r)},{int(g)},{int(b)})"
+
+rows_html = []
+for gy in grid.index:
+    cells = []
+    for gx in grid.columns:
+        value = grid.loc[gy, gx]
+        bg = "#f2f2f2" if np.isnan(value) else colour(value)
+        tip = "no data" if np.isnan(value) else f"{value:.1f} dBm"
+        mark = "&#9733;" if gx == 0 and gy == 0 else ""
+        cells.append(
+            f'<td style="background:{bg}" '
+            f'title="x={gx}m, y={gy}m: {tip}">{mark}</td>'
+        )
+    rows_html.append("<tr>" + "".join(cells) + "</tr>")
+
+bars_html = []
+for name, row in zone_table.iterrows():
+    width = int(np.clip((row["mean"] + 90) / 50, 0, 1) * 300)
+    bars_html.append(
+        f'<div class="zone">{name:>8} '
+        f'<span class="bar" style="width:{width}px;'
+        f'background:{colour(row["mean"])}"></span> '
+        f'{row["mean"]:.2f} dBm</div>'
+    )
+
+page = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WiFiScope - Wi-Fi Heatmap</title>
+<style>
+ body {{ font-family: Arial, sans-serif; margin: 24px auto; padding: 0 16px;
+        max-width: 1100px; color: #222; }}
+ .map-wrap {{ max-width: 100%; overflow: auto; }}
+ table.map {{ border-collapse: collapse; }}
+ table.map td {{ width: 12px; min-width: 12px; height: 12px; padding: 0;
+                text-align: center; font-size: 10px; }}
+ .bar {{ display: inline-block; max-width: 45vw; height: 14px;
+         vertical-align: middle; }}
+ .zone {{ margin: 6px 0; }}
+ table.data {{ border-collapse: collapse; }}
+ table.data td, table.data th {{ border: 1px solid #999; padding: 5px 10px; }}
+ @media (max-width: 600px) {{
+   body {{ margin: 12px auto; padding: 0 10px; }}
+   table.map td {{ width: 10px; min-width: 10px; height: 10px; }}
+ }}
+</style>
+</head>
+<body>
+<h1>WiFiScope - Wi-Fi Heatmap Floor Plan</h1>
+<p>Each square is 2 m x 2 m. Green is strong, red is weak, and grey means
+no measurement. The star marks the router. Hover over a square for its signal.</p>
+<div class="map-wrap"><table class="map">{''.join(rows_html)}</table></div>
+<h2>Coverage quality</h2>
+{quality_table.to_html(classes="data")}
+<h2>Average signal by distance from router</h2>
+{''.join(bars_html)}
+<h2>Key numbers</h2>
+<ul>
+<li>Total points: {len(df)}</li>
+<li>Average signal: {df['rssi'].mean():.1f} dBm</li>
+<li>Strongest: {best['rssi']:.1f} dBm ({best['receiver']})</li>
+<li>Weakest: {worst['rssi']:.1f} dBm ({worst['receiver']})</li>
+<li>Dead-zone points: {len(dead)}</li>
+<li>Outlier readings flagged and kept: {int(df['rssi1_outlier'].sum())}</li>
+<li>Correlation distance vs signal: {corr_distance:.2f}</li>
+<li>Correlation rays vs signal: {corr_rays:.2f}</li>
+</ul>
+</body>
+</html>"""
+
+with open("outputs\\wifiscope_heatmap.html", "w", encoding="utf-8") as file:
+    file.write(page)
+
 print("\n" + "=" * 72)
 print("WIFISCOPE - TERMINAL DASHBOARD")
 print("=" * 72)
@@ -204,7 +288,7 @@ print("R = router      . = no measurement")
 print("\n".join(text_map))
 
 # =========================================================
-# STEP 12: SAVE RESULTS
+# STEP 13: SAVE RESULTS
 # =========================================================
 df.to_csv("outputs\\wifiscope_results.csv", index=False)
 zone_table.to_csv("outputs\\wifiscope_zone_summary.csv")
@@ -228,3 +312,4 @@ with open("outputs\\wifiscope_summary_report.txt", "w", encoding="utf-8") as f:
     f.write("\n".join(text_map))
 
 print("\nDone! Results were saved in the outputs folder.")
+print("Open outputs\\wifiscope_heatmap.html in a browser to view the colour heatmap.")

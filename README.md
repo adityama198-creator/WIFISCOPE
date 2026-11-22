@@ -105,9 +105,12 @@ falls in a square, their RSSI values are averaged.
 The program prints a compact terminal dashboard containing the key numbers,
 coverage-quality bars, distance-zone signal bars, and a text heatmap. A 2 m by
 2 m square is shown as `E`, `G`, `F`, `W`, or `V` for its signal quality.
-The router is marked `R`, and `.` means no measurement in that square.
+The router is marked `R`, and `.` means no measurement in that square. It also
+creates `outputs/wifiscope_heatmap.html`, a colour heatmap that can be opened in
+a web browser. The heatmap adapts to narrow screens and can be scrolled
+horizontally when the full map does not fit.
 
 ### 12. Save the results
 
 The program saves the cleaned data, cleaning report, analysis results, distance
-zone summary, and text report in the `outputs` folder.
+zone summary, text report, and HTML heatmap in the `outputs` folder.
